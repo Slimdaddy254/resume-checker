@@ -33,8 +33,8 @@ An intelligent web app that evaluates resumes for ATS (Applicant Tracking System
 ## 📦 Installation
 
 ```bash
-git clone https://github.com/your-username/ats-resume-checker.git
-cd ats-resume-checker
+git clone https://github.com/Slimdaddy254/resume-checker.git
+cd resume-checker
 npm install
 npm start
 ## Getting Started
