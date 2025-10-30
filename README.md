@@ -1,19 +1,42 @@
-# Welcome to React Router!
+# 🧠 AI Resume ATS Checker
 
-A modern, production-ready template for building full-stack React applications using React Router.
+An intelligent web app that evaluates resumes for ATS (Applicant Tracking System) compatibility and provides actionable feedback using AI. Built with **PuterJS** for AI analysis and **React Router** for seamless navigation.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## 🚀 Features
 
-## Features
+- 📄 Upload or paste your resume
+- ✅ Get an ATS score (0–100)
+- 🧠 AI-powered feedback on formatting, keywords, and structure
+- 📊 Visual breakdown of strengths and weaknesses
+- 🔁 Real-time suggestions to improve your resume
+- 🌐 SPA architecture using React Router
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+##🧠 How It Works
 
+1. 	User uploads or pastes resume text
+2. 	PuterJS processes the input and returns:
+• 	ATS score
+• 	Keyword match analysis
+• 	Formatting issues
+• 	Suggestions for improvement
+3. 	Results are displayed with visual feedback and improvement tips
+
+## 🛠️ Tech Stack
+
+| Technology     | Purpose                                  |
+|----------------|-------------------------------------------|
+| React          | Frontend framework                        |
+| React Router   | Client-side routing                       |
+| PuterJS        | AI resume analysis                        |
+| Tailwind CSS   | Styling and layout (optional)             |
+
+## 📦 Installation
+
+```bash
+git clone https://github.com/your-username/ats-resume-checker.git
+cd ats-resume-checker
+npm install
+npm start
 ## Getting Started
 
 ### Installation
@@ -78,10 +101,3 @@ Make sure to deploy the output of `npm run build`
 │   └── server/    # Server-side code
 ```
 
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
