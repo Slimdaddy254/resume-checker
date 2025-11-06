@@ -310,48 +310,89 @@ export const usePuterStore = create<PuterStore>((set, get) => {
         return puter.fs.delete(path);
     };
 
+    const defaultModels = ["gpt-5-mini", "gpt-4o", "gpt-4", "claude-sonnet-4", "deepseek-chat", "gemini-2.0-flash"];
+    const MODEL_TIMEOUT_MS = 60000; // 60 seconds per model attempt
+
+    const aiChatWithFallback = async (
+        prompt: string | ChatMessage[],
+        imageURL?: string | PuterChatOptions,
+        testMode?: boolean,
+        options?: PuterChatOptions
+    ): Promise<AIResponse | undefined> => {
+        const puter = getPuter();
+        if (!puter) {
+            setError("Puter.js not available");
+            return;
+        }
+
+        const preferredModel = options?.model;
+        const models = preferredModel
+            ? [preferredModel, ...defaultModels.filter((m) => m !== preferredModel)]
+            : defaultModels;
+
+        let lastErr: unknown = null;
+
+        for (const model of models) {
+            try {
+                const opts = { ...(typeof imageURL === "object" && imageURL !== null ? {} : options), ...(options || {}), model } as PuterChatOptions;
+
+                // Create a timeout promise
+                const timeoutPromise = new Promise<never>((_, reject) => {
+                    setTimeout(() => reject(new Error(`Model ${model} timed out after ${MODEL_TIMEOUT_MS}ms`)), MODEL_TIMEOUT_MS);
+                });
+
+                // Race between the API call and the timeout
+                let chatPromise: Promise<Object>;
+                
+                if (typeof imageURL === "object" && imageURL !== null && !("startsWith" in imageURL)) {
+                    const mergedOpts = { ...(imageURL as PuterChatOptions), ...opts };
+                    chatPromise = puter.ai.chat(prompt, undefined, testMode, mergedOpts);
+                } else {
+                    chatPromise = puter.ai.chat(prompt, imageURL as string | PuterChatOptions, testMode, opts);
+                }
+
+                const res = await Promise.race([chatPromise, timeoutPromise]);
+                return res as AIResponse | undefined;
+            } catch (err) {
+                lastErr = err;
+                console.warn(`Model ${model} failed:`, err instanceof Error ? err.message : err);
+                // try next model
+            }
+        }
+
+        const msg = lastErr instanceof Error ? lastErr.message : "AI chat failed on all fallback models";
+        setError(msg);
+        return;
+    };
+
     const chat = async (
         prompt: string | ChatMessage[],
         imageURL?: string | PuterChatOptions,
         testMode?: boolean,
         options?: PuterChatOptions
     ) => {
-        const puter = getPuter();
-        if (!puter) {
-            setError("Puter.js not available");
-            return;
-        }
-        // return puter.ai.chat(prompt, imageURL, testMode, options);
-        return puter.ai.chat(prompt, imageURL, testMode, options) as Promise<
-            AIResponse | undefined
-        >;
+        return aiChatWithFallback(prompt, imageURL, testMode, options);
     };
 
     const feedback = async (path: string, message: string) => {
-        const puter = getPuter();
-        if (!puter) {
-            setError("Puter.js not available");
-            return;
-        }
+        const payload: ChatMessage[] = [
+            {
+                role: "user",
+                content: [
+                    {
+                        type: "file",
+                        puter_path: path,
+                    },
+                    {
+                        type: "text",
+                        text: message,
+                    },
+                ],
+            },
+        ];
 
-        return puter.ai.chat(
-            [
-                {
-                    role: "user",
-                    content: [
-                        {
-                            type: "file",
-                            puter_path: path,
-                        },
-                        {
-                            type: "text",
-                            text: message,
-                        },
-                    ],
-                },
-            ],
-            { model: "gpt-5-mini" }
-        ) as Promise<AIResponse | undefined>;
+        // start with preferred model then fall back
+        return aiChatWithFallback(payload, undefined, undefined, { model: "gpt-5-mini" });
     };
 
     const img2txt = async (image: string | File | Blob, testMode?: boolean) => {
