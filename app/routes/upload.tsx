@@ -52,15 +52,28 @@ const Upload = () => {
         )
         if (!feedback) return setStatusText('Error: Failed to analyze resume');
 
-        const feedbackText = typeof feedback.message.content === 'string'
-            ? feedback.message.content
-            : feedback.message.content[0].text;
+        try {
+            const feedbackText = typeof feedback.message.content === 'string'
+                ? feedback.message.content
+                : feedback.message.content[0].text;
 
-        data.feedback = JSON.parse(feedbackText);
-        await kv.set(`resume:${uuid}`, JSON.stringify(data));
-        setStatusText('Analysis complete, redirecting...');
-        console.log(data);
-        navigate(`/resume/${uuid}`);
+            const parsedFeedback = JSON.parse(feedbackText);
+            
+            // Validate that the feedback has the required structure
+            if (!parsedFeedback.ATS || typeof parsedFeedback.ATS.score !== 'number') {
+                console.error('Invalid feedback structure:', parsedFeedback);
+                return setStatusText('Error: AI returned invalid feedback format. Please try again.');
+            }
+
+            data.feedback = parsedFeedback;
+            await kv.set(`resume:${uuid}`, JSON.stringify(data));
+            setStatusText('Analysis complete, redirecting...');
+            console.log(data);
+            navigate(`/resume/${uuid}`);
+        } catch (error) {
+            console.error('Failed to parse AI feedback:', error);
+            return setStatusText('Error: Failed to parse AI response. Please try again.');
+        }
     }
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {

@@ -73,11 +73,15 @@ const Resume = () => {
                 </section>
                 <section className="feedback-section">
                     <h2 className="text-4xl !text-black font-bold">Resume Review</h2>
-                    {feedback ? (
+                    {feedback && feedback.ATS ? (
                         <div className="flex flex-col gap-8 animate-in fade-in duration-1000">
                             <Summary feedback={feedback} />
-                            <ATS score={feedback?.ATS?.score ?? 0} suggestions={feedback?.ATS?.tips ?? []} />
+                            <ATS score={feedback.ATS.score ?? 0} suggestions={feedback.ATS.tips ?? []} />
                             <Details feedback={feedback} />
+                        </div>
+                    ) : feedback ? (
+                        <div className="p-6 bg-red-50 rounded-lg">
+                            <p className="text-red-600">⚠️ The feedback data is incomplete or in an unexpected format. Please try uploading your resume again.</p>
                         </div>
                     ) : (
                         <img src="/images/resume-scan-2.gif" className="w-full" />
