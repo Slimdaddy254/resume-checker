@@ -57,7 +57,21 @@ const Upload = () => {
                 ? feedback.message.content
                 : feedback.message.content[0].text;
 
-            const parsedFeedback = JSON.parse(feedbackText);
+            // Try to extract JSON from the response (in case AI wraps it in markdown or text)
+            let jsonText = feedbackText.trim();
+            
+            // Remove markdown code blocks if present
+            if (jsonText.startsWith('```')) {
+                jsonText = jsonText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+            }
+            
+            // Try to find JSON object in the text
+            const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                jsonText = jsonMatch[0];
+            }
+
+            const parsedFeedback = JSON.parse(jsonText);
             
             // Validate that the feedback has the required structure
             if (!parsedFeedback.ATS || typeof parsedFeedback.ATS.score !== 'number') {
@@ -72,6 +86,9 @@ const Upload = () => {
             navigate(`/resume/${uuid}`);
         } catch (error) {
             console.error('Failed to parse AI feedback:', error);
+            console.error('Raw feedback:', typeof feedback.message.content === 'string' 
+                ? feedback.message.content 
+                : feedback.message.content[0].text);
             return setStatusText('Error: Failed to parse AI response. Please try again.');
         }
     }
